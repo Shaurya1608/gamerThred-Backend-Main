@@ -9,23 +9,27 @@ dotenv.config();
  */
 export const createTransporter = () => {
     // Use robust settings for cloud environments (Render/Vercel)
-    // 1. Prefer explicit ENV variables if set
-    // 2. Fallback to standard Gmail SSL (Port 465)
-    // 3. Force IPv4 to avoid timeouts
     const transportConfig = {
         host: process.env.EMAIL_HOST || "smtp.gmail.com",
         port: Number(process.env.EMAIL_PORT) || 465,
-        secure: process.env.EMAIL_PORT == 587 ? false : true, // True for 465, false for 587
+        secure: Number(process.env.EMAIL_PORT) === 465, // Standard: true for 465, false for 587
         auth: {
             user: process.env.MAIL_USER,
             pass: process.env.MAIL_PASS,
+        },
+        pool: true, // Use pooling for better performance in production
+        maxConnections: 5,
+        maxMessages: 100,
+        tls: {
+            // 🛡️ Cloud Compatibility: Prevent handshake failures on certain hosts
+            rejectUnauthorized: false
         },
         connectionTimeout: 20000, // Increased for cloud latency
         greetingTimeout: 20000,
         socketTimeout: 20000,
         dnsTimeout: 10000, // Explicit DNS timeout
-        logger: true, // Enable internal logging
-        debug: true   // Enable debug output
+        logger: false, // Set to false in prod unless debugging
+        debug: false   
     };
 
     return nodemailer.createTransport(transportConfig);

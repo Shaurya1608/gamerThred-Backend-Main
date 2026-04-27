@@ -103,7 +103,7 @@ export const startMission = async (req, res) => {
         session.endSession();
         return res.status(400).json({
           success: false,
-          message: "Mission already finished",
+          message: "Mission already finished (Completed or Failed)",
         });
       }
 
