@@ -34,6 +34,7 @@ router.post("/register",rateLimit({ keyPrefix: "register", limit: 5, windowSecon
 router.get("/verify-email", verification);
 router.post("/verify-email-otp", verifyEmailOtp);
 router.post("/login",rateLimit({ keyPrefix: "login", limit: 5, windowSeconds: 90 }),loginUser);
+router.post("/forgot-password", rateLimit({ keyPrefix: "forgot_password", limit: 3, windowSeconds: 600 }), forgetPassword);
 router.get("/me", isAuthenticated, getMe);
 router.post("/refresh", rateLimit({ keyPrefix: "refresh", limit: 10, windowSeconds: 60 }), refreshAccessToken);
 router.post("/logout", isAuthenticated, logoutUser);

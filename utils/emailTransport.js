@@ -11,7 +11,7 @@ export const createTransporter = () => {
     // Use robust settings for cloud environments (Render/Vercel)
     const transportConfig = {
         host: process.env.EMAIL_HOST || "smtp.gmail.com",
-        port: Number(process.env.EMAIL_PORT) || 465,
+        port: Number(process.env.EMAIL_PORT) || 587,
         secure: Number(process.env.EMAIL_PORT) === 465, // Standard: true for 465, false for 587
         auth: {
             user: process.env.MAIL_USER,
