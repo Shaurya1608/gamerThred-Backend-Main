@@ -123,23 +123,24 @@ export const startMission = async (req, res) => {
       // We no longer block mission start based on daily completion.
       // Tickets are now the primary entry gate.
 
-      if (mission.entryFeeTickets > 0) {
-        if (user.tickets < mission.entryFeeTickets) {
+      // 🎫 TICKET DEDUCTION LOGIC
+      const entryFee = Number(mission.entryFeeTickets ?? 1);
+      
+      if (entryFee > 0) {
+        if (user.tickets < entryFee) {
           await session.abortTransaction();
           session.endSession();
           return res.status(400).json({
             success: false,
             message: "Not enough Tickets to start mission",
-            required: mission.entryFeeTickets,
+            required: entryFee,
             balance: user.tickets
           });
         }
 
-        // 🎫 DEDUCT TICKETS
-        user.tickets -= mission.entryFeeTickets;
-        console.log(`[MissionStart] Deducted ${mission.entryFeeTickets} tickets from user ${userId}. New balance: ${user.tickets}`);
+        user.tickets -= entryFee;
+        logger.info(`[MissionStart] Deducted ${entryFee} tickets from user ${userId}. New balance: ${user.tickets}`);
         
-        // 🧹 Inventory Cache Invalidation (Tickets Changed)
         await redis.del(`inventory:${userId}`);
       } else if (mission.entryFeeGtc > 0) {
          // Fallback for old missions that might not have ticket fee yet (should be 0 by default but safe to keep)
@@ -402,7 +403,9 @@ export const completeMission = async (req, res) => {
       },
       isGtcBoosted: gtcMultiplier > 1,
       isXpBoosted: xpMultiplier > 1,
-      minScore: session.minScore
+      minScore: session.minScore,
+      attemptsLeft: Math.max(0, session.maxAttempts - session.attemptsUsed),
+      sessionId: session._id
     });
   }
 

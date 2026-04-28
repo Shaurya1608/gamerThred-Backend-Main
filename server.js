@@ -63,6 +63,7 @@ import activityService from "./utils/activityService.js";
 import globalErrorHandler from "./middleware/errorMiddleware.js";
 import { verifyConnection } from "./utils/emailTransport.js";
 import { csrfProtection } from "./middleware/csrfMiddleware.js";
+import xss from "xss";
 // Refreshing environment 
 
 const app = express();
@@ -385,8 +386,8 @@ io.on("connection", async (socket) => {
           });
       }
 
-      // 🛡️ SANITIZATION
-      const cleanContent = content.replace(/<[^>]*>?/gm, "").trim().substring(0, 500);
+      // 🛡️ PROFESSIONAL SANITIZATION (Prevents XSS bypasses)
+      const cleanContent = xss(content).trim().substring(0, 500);
       if (!cleanContent) return;
 
       const newMessage = await Message.create({
