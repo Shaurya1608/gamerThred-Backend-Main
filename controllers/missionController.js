@@ -78,7 +78,8 @@ export const startMission = async (req, res) => {
         existing.lastAttemptStartedAt = new Date();
         await existing.save({ session });
 
-        console.log(`[MissionStart] Resuming existing session ${existing._id} for user ${userId}`);
+        logger.info(`[MissionStart] User ${userId} is RESUMING active session ${existing._id}. No tickets deducted.`);
+        
         await session.commitTransaction(); // Commit the update
         session.endSession();
         return res.status(200).json({
