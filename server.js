@@ -52,7 +52,7 @@ import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
 import hpp from "hpp";
-import xss from "xss-clean";
+import xssClean from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
 import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
@@ -147,7 +147,7 @@ app.use(
 app.use(helmet()); // Basic security headers
 app.use(compression()); // Compress responses
 app.use(mongoSanitize()); // Prevent NoSQL Injection
-app.use(xss()); // Prevent XSS
+app.use(xssClean()); // Prevent XSS
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
 if (process.env.NODE_ENV === "development") {
