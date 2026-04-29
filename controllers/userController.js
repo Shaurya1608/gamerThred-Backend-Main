@@ -543,7 +543,9 @@ export const loginUser = async (req, res) => {
     if (!user.isVerified) {
       return res.status(401).json({
         success: false,
+        code: "USER_UNVERIFIED",
         message: "Please verify your email first",
+        email: user.email
       });
     }
 

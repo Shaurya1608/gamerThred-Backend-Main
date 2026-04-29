@@ -6,7 +6,7 @@ import { MissionSession } from "../models/MissionSession.js";
 import { Game } from "../models/Game.js";
 import { UserDailyQuest } from "../models/UserDailyQuest.js";
 import { calculateLevelInfo } from "../utils/progressionUtil.js";
-import { validateScore, validateSessionTiming } from "../utils/securityUtil.js";
+import { validateScore, validateSessionTiming, verifySignature } from "../utils/securityUtil.js";
 import { rewardQueue } from "../utils/rewardQueue.js";
 import activityService from "../utils/activityService.js";
 import weekendMissionService from "../utils/weekendMissionService.js";
@@ -174,7 +174,8 @@ export const startMission = async (req, res) => {
         rewardLoyalty: mission.rewardLoyalty || 0,
         rewardXp: mission.rewardXp || 50,
         expiresAt: mission.expiresAt,
-        lastAttemptStartedAt: new Date()
+        lastAttemptStartedAt: new Date(),
+        securitySecret: crypto.randomBytes(16).toString('hex')
       }], { session });
 
       await session.commitTransaction();
@@ -197,6 +198,7 @@ export const startMission = async (req, res) => {
           gameId: newSession[0].gameId,
           attemptsLeft: newSession[0].maxAttempts,
           expiresAt: newSession[0].expiresAt,
+          securitySecret: newSession[0].securitySecret
         },
       });
     } catch (err) {
@@ -220,7 +222,7 @@ export const startMission = async (req, res) => {
 
 export const completeMission = async (req, res) => {
   try {
-    const { sessionId, score, distance } = req.body;
+    const { sessionId, score, distance, signature } = req.body;
     const userId = req.user._id;
 
   const session = await MissionSession.findById(sessionId);
@@ -238,6 +240,15 @@ export const completeMission = async (req, res) => {
   const timingValidation = await validateSessionTiming(session.createdAt, session.gameId);
   if (!timingValidation.isValid) {
     return res.status(400).json({ success: false, message: `Anti-cheat: ${timingValidation.reason}` });
+  }
+
+  // 🛡️ SIGNATURE VALIDATION (HMAC)
+  if (session.securitySecret) {
+      const isSignatureValid = verifySignature(signature, { score, sessionId }, session.securitySecret);
+      if (!isSignatureValid) {
+          logger.warn(`[ANTI-CHEAT] Signature mismatch for user ${userId}, session ${sessionId}. Score: ${score}, Signature: ${signature}`);
+          return res.status(400).json({ success: false, message: "Security Integrity Check Failed: Signature Mismatch." });
+      }
   }
 
   // 🛑 HARD STOP: already ended

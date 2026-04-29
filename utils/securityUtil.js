@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import cacheService from "./cacheService.js";
 
 /**
@@ -80,3 +81,28 @@ export const validateSessionTiming = async (startTime, gameId) => {
     return { isValid: true }; // Fail-safe: allow if validation fails
   }
 };
+
+/**
+ * Verifies a digital signature for a game score.
+ * @param {string} signature - The signature sent by the client.
+ * @param {object} data - The data that was signed { score, sessionId }.
+ * @param {string} secret - The session-specific secret key.
+ * @returns {boolean}
+ */
+export const verifySignature = (signature, data, secret) => {
+  if (!signature || !secret) return false;
+
+  try {
+    const payload = `${data.score}:${data.sessionId}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(payload)
+      .digest("hex");
+
+    return signature === expectedSignature;
+  } catch (err) {
+    console.error("[Security] Signature verification failed:", err);
+    return false;
+  }
+};
+

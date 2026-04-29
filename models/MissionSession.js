@@ -79,6 +79,9 @@ const missionSessionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    securitySecret: {
+      type: String,
+    },
   },
   { timestamps: true },
 );
