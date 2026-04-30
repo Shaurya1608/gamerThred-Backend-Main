@@ -88,7 +88,8 @@ export const startMission = async (req, res) => {
           session: {
             sessionId: existing._id,
             gameKey: mission.gameId?.gameKey || "unknown",
-            gameId: mission.gameId?._id || mission.gameId
+            gameId: mission.gameId?._id || mission.gameId,
+            securitySecret: existing.securitySecret
           }
         });
       }

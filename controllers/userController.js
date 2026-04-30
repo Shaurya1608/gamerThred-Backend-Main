@@ -887,13 +887,21 @@ export const getMe = async (req, res) => {
     
     // Check if it's a new day
     if (now.getDate() !== lastTicketReset.getDate() || now.getMonth() !== lastTicketReset.getMonth() || now.getFullYear() !== lastTicketReset.getFullYear()) {
+        const updateData = {
+            dailyTicketClaimed: false,
+            dailyTicketLastReset: now
+        };
+        
         // Refill if below 5
         if (user.tickets < 5) {
-            user.tickets = 5;
+            updateData.tickets = 5;
+            user.tickets = 5; // Sync in-memory
         }
-        user.dailyTicketClaimed = false;
-        user.dailyTicketLastReset = now;
-        await user.save();
+
+        user.dailyTicketClaimed = false; // Sync in-memory
+        user.dailyTicketLastReset = now; // Sync in-memory
+
+        await User.updateOne({ _id: user._id }, { $set: updateData });
     }
 
     const levelInfo = await calculateLevelInfo(user.xp || 0);

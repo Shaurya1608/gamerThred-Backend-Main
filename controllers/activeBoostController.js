@@ -20,7 +20,7 @@ export const checkAndGrantBoost = async (user) => {
   }
 
   // Grant logic: Available now
-  user.activeBoost = {
+  const activeBoost = {
     availableAt: now,
     expiresAt: null, 
     activatedAt: null,
@@ -31,7 +31,11 @@ export const checkAndGrantBoost = async (user) => {
   };
 
   try {
-    await user.save();
+    await User.updateOne(
+        { _id: user._id }, 
+        { $set: { activeBoost } }
+    );
+    user.activeBoost = activeBoost; // Sync in-memory for the current request
     console.log(`[Boost] Granted daily booster to user ${user._id}`);
   } catch (err) {
     console.error("[Boost] Grant failed:", err);
