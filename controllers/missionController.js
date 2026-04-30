@@ -15,6 +15,7 @@ import logger from "../utils/logger.js";
 import { redis } from "../config/redis.js";
 import { invalidateCache, invalidatePattern } from "../utils/redisUtils.js";
 import { UserActiveEffect } from "../models/UserActiveEffect.js";
+import crypto from "crypto";
 
 
 export const startMission = async (req, res) => {
