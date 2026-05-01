@@ -1313,8 +1313,8 @@ export const completeOnboarding = async (req, res) => {
     const { username, dob, phoneNumber } = req.body;
     const userId = req.user._id;
 
-    if (!username || !dob || !phoneNumber) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    if (!username || !dob) {
+      return res.status(400).json({ success: false, message: "Username and Date of Birth are required" });
     }
 
     // Double check username uniqueness
@@ -1327,15 +1327,20 @@ export const completeOnboarding = async (req, res) => {
       return res.status(400).json({ success: false, message: "Username already taken" });
     }
 
+    const updateFields = {
+      username,
+      dob: new Date(dob),
+      onboardingCompleted: true,
+      $inc: { gtc: 100 }
+    };
+
+    if (phoneNumber) {
+      updateFields.phoneNumber = phoneNumber;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        username,
-        dob: new Date(dob),
-        phoneNumber,
-        onboardingCompleted: true,
-        $inc: { gtc: 100 }
-      },
+      updateFields,
       { new: true }
     ).select("-password -otp -otpExpiry -resetPasswordToken -resetPasswordExpiry");
 
